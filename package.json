@@ -1,0 +1,35 @@
+{
+  "name": "sas-backend",
+  "version": "1.0.0",
+  "description": "Backend for Student Attendance System",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShivangM/sas-backend.git"
+  },
+  "keywords": [
+    "backend",
+    "sas"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.1",
+    "express-validator": "^6.13.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.0.12"
+  },
+  "bugs": {
+    "url": "https://github.com/ShivangM/sas-backend/issues"
+  },
+  "engines": {
+    "node": "14.17.6"
+  },
+  "homepage": "https://github.com/ShivangM/sas-backend#readme"
+}
