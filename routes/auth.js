@@ -1,11 +1,11 @@
 const express = require('express');
-const User = require('../models/User');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 var fetchUser = require('../middleware/fetchUser')
 const JWT_SECRET = "secretadon"
+const db = require("../db")
 
 //Route 1: Create a User using: POST "/api/auth/createuser". No login required
 router.post('/createuser', [
@@ -23,19 +23,15 @@ router.post('/createuser', [
   }
   // Check whether the user with this email exists already
   try {
-    let user = await User.findOne({ email: req.body.email });
-    if (user) {
+    let user = await db.query(`SELECT * FROM authentications WHERE email= '${req.body.email}'`)
+
+    if (user.rows.length > 0) {
       return res.status(400).json({ success, error: "Sorry a user with this email already exists" })
     }
 
     const salt = await bcrypt.genSalt(10);
     secPassword = await bcrypt.hash(req.body.password, salt);
-    // Create a new user
-    user = await User.create({
-      name: req.body.name,
-      password: secPassword,
-      email: req.body.email,
-    })
+    await db.query(`insert into authentications values('${req.body.name}','${req.body.email}','${secPassword}')`)
 
     const data = {
       user: {
@@ -66,13 +62,13 @@ router.post('/login', [
 
   const { email, password } = req.body;
   try {
-    let user = await User.findOne({ email });
-    if (!user) {
+    let user = await db.query(`SELECT * FROM authentications WHERE email='${email}'`)
+    if (user.rows.length === 0) {
       success = false;
       return res.status(400).json({ success, error: "Please try to login with valid credentials." })
     }
 
-    const passwordComp = await bcrypt.compare(password, user.password)
+    const passwordComp = await bcrypt.compare(password, user.rows[0].password)
     if (!passwordComp) {
       success = false;
       return res.status(400).json({ success, error: "Please try to login with valid credentials." })

@@ -1,5 +1,5 @@
+require('dotenv').config()
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = "secretadon"
 
 const fetchUser = (req, res, next) => {
     //get token from jwt and add id to req object
@@ -9,7 +9,7 @@ const fetchUser = (req, res, next) => {
     }
 
     try {
-        const data = jwt.verify(token, JWT_SECRET);
+        const data = jwt.verify(token, process.env.JWT_SECRET);
         req.user = data.user;
         next()
     } catch (error) {
