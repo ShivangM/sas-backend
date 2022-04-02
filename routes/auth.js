@@ -9,7 +9,6 @@ const db = require("../db")
 
 //Route 1: Create a User using: POST "/api/auth/createuser". No login required
 router.post('/createuser', [
-  body('name', 'Enter a valid name').isLength({ min: 3 }),
   body('email', 'Enter a valid email').isEmail(),
   body('password', 'Password must be atleast 5 characters').isLength({ min: 5 }),
 ], async (req, res) => {
@@ -31,7 +30,7 @@ router.post('/createuser', [
 
     const salt = await bcrypt.genSalt(10);
     secPassword = await bcrypt.hash(req.body.password, salt);
-    await db.query(`insert into authentications values('${req.body.name}','${req.body.email}','${secPassword}')`)
+    await db.query(`insert into authentications values('${req.body.email}','${secPassword}')`)
 
     const data = {
       user: {
