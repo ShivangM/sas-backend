@@ -15,22 +15,28 @@ router.post('/createuser', [
   // If there are errors, return Bad request and the errors
 
   let success = false;
-
   const errors = validationResult(req);
+
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
+  
   // Check whether the user with this email exists already
   try {
-    let user = await db.query(`SELECT * FROM authentications WHERE email= '${req.body.email}'`)
+    let user = await db.query(`SELECT * FROM student_authentications WHERE email= '${req.body.email}'`)
+    let clg_student = await db.query(`SELECT * FROM students WHERE email= '${req.body.email}'`)
 
     if (user.rows.length > 0) {
       return res.status(400).json({ success, error: "Sorry a user with this email already exists" })
     }
 
+    if (clg_student.rows.length === 0) {
+      return res.status(400).json({ success, error: "Not registered student!" })
+    }
+
     const salt = await bcrypt.genSalt(10);
     secPassword = await bcrypt.hash(req.body.password, salt);
-    await db.query(`insert into authentications values('${req.body.email}','${secPassword}')`)
+    await db.query(`insert into student_authentications values('${req.body.email}','${secPassword}')`)
 
     const data = {
       user: {
@@ -61,16 +67,16 @@ router.post('/login', [
 
   const { email, password } = req.body;
   try {
-    let user = await db.query(`SELECT * FROM authentications WHERE email='${email}'`)
+    let user = await db.query(`SELECT * FROM student_authentications WHERE email='${email}'`)
     if (user.rows.length === 0) {
       success = false;
-      return res.status(400).json({ success, error: "Please try to login with valid credentials." })
+      return res.status(400).json({ success, error: "Please try to login with valid email." })
     }
 
     const passwordComp = await bcrypt.compare(password, user.rows[0].password)
     if (!passwordComp) {
       success = false;
-      return res.status(400).json({ success, error: "Please try to login with valid credentials." })
+      return res.status(400).json({ success, error: "Incorrect Password" })
     }
 
     const data = {
@@ -92,12 +98,13 @@ router.post('/login', [
 //Route 3: Get User Details using: POST "/api/auth/getuser". Login required
 router.post('/getuser', fetchUser, async (req, res) => {
   try {
-    userID = req.user.id
-    const user = await User.findById(userID)
-    res.send(user)
+    userEmail = req.body.email
+    const user = await db.query(`SELECT * FROM students WHERE email='${userEmail}'`)
+    console.log(user.rows)
+    res.send(user.rows)
   } catch (error) {
     console.error(error.message);
-    res.status(500).send("Some Error occured");
+    res.status(500).send("User Not Found!");
   }
 })
 
