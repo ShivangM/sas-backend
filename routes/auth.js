@@ -40,7 +40,7 @@ router.post('/createuser', [
 
     const data = {
       user: {
-        id: user.id
+        email: req.body.email
       }
     }
     const authToken = jwt.sign(data, JWT_SECRET)
@@ -81,7 +81,7 @@ router.post('/login', [
 
     const data = {
       user: {
-        id: user.id
+        email: email
       }
     }
 
@@ -98,7 +98,7 @@ router.post('/login', [
 //Route 3: Get User Details using: POST "/api/auth/getuser". Login required
 router.post('/getuser', fetchUser, async (req, res) => {
   try {
-    userEmail = req.body.email
+    userEmail = req.email
     const user = await db.query(`SELECT * FROM students WHERE email='${userEmail}'`)
     console.log(user.rows)
     res.send(user.rows)

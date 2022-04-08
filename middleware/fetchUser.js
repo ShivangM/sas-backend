@@ -9,7 +9,8 @@ const fetchUser = (req, res, next) => {
     }
 
     try {
-        jwt.verify(token, process.env.JWT_SECRET)
+        const data = jwt.verify(token, process.env.JWT_SECRET)
+        req.email = data.user.email
         next()
     } catch (error) {
         res.status(401).send({ error: "Please authenticate using a valid token" })
