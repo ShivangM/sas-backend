@@ -10,6 +10,7 @@ app.use(express.json())
 
 //Available Routes
 app.use('/api/auth', require("./routes/auth"))
+app.use('/api/data', require("./routes/data"))
 
 app.listen(port, () => {
   console.log(`SAS backend listening at port:${port}`)
