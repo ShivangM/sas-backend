@@ -100,7 +100,6 @@ router.post('/getuser', fetchUser, async (req, res) => {
   try {
     userEmail = req.email
     const user = await db.query(`SELECT * FROM students WHERE email='${userEmail}'`)
-    console.log(user.rows)
     res.send(user.rows)
   } catch (error) {
     console.error(error.message);
