@@ -6,11 +6,13 @@ const jwt = require('jsonwebtoken');
 var fetchUser = require('../middleware/fetchUser')
 require('dotenv').config();
 const db = require("../db")
+require('dotenv').config();
 
 //Route 1: Create a User using: POST "/api/auth/createuser". No login required
 router.post('/createuser', [
   body('email', 'Enter a valid email').isEmail(),
   body('password', 'Password must be atleast 5 characters').isLength({ min: 5 }),
+  body('type', 'Type Not Found').exists()
 ], async (req, res) => {
   // If there are errors, return Bad request and the errors
 
@@ -23,27 +25,35 @@ router.post('/createuser', [
   
   // Check whether the user with this email exists already
   try {
-    let user = await db.query(`SELECT * FROM student_authentications WHERE email= '${req.body.email}'`)
-    let clg_student = await db.query(`SELECT * FROM students WHERE email= '${req.body.email}'`)
+    const type = req.body.type;
+    let user = type==="student"?
+    await db.query(`SELECT * FROM student_authentications WHERE email= '${req.body.email}'`):
+    await db.query(`SELECT * FROM teacher_authentications WHERE email= '${req.body.email}'`)
+
+    let clg_authenticated = type==="student"?
+    await db.query(`SELECT * FROM students WHERE email= '${req.body.email}'`):
+    await db.query(`SELECT * FROM teacher WHERE email= '${req.body.email}'`)
 
     if (user.rows.length > 0) {
       return res.status(400).json({ success, error: "Sorry a user with this email already exists" })
     }
 
-    if (clg_student.rows.length === 0) {
-      return res.status(400).json({ success, error: "Not registered student!" })
+    if (clg_authenticated.rows.length === 0) {
+      return res.status(400).json({ success, error: "Not registered to collage!" })
     }
 
     const salt = await bcrypt.genSalt(10);
     secPassword = await bcrypt.hash(req.body.password, salt);
-    await db.query(`insert into student_authentications values('${req.body.email}','${secPassword}')`)
+    type==="student"?await 
+    db.query(`insert into student_authentications values('${req.body.email}','${secPassword}')`):
+    db.query(`insert into teacher_authentications values('${req.body.email}','${secPassword}')`)
 
     const data = {
       user: {
         email: req.body.email
       }
     }
-    const authToken = jwt.sign(data, JWT_SECRET)
+    const authToken = jwt.sign(data, process.env.JWT_SECRET)
     success = true;
     res.json({ success, authToken })
 
@@ -57,6 +67,7 @@ router.post('/createuser', [
 router.post('/login', [
   body('email', 'Enter a valid email').isEmail(),
   body('password', 'Password cannot be blank').exists(),
+  body('type', 'Type Not Found').exists(),
 ], async (req, res) => {
   // If there are errors, return Bad request and the errors
   let success = false;
@@ -65,9 +76,12 @@ router.post('/login', [
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { email, password } = req.body;
+  const { email, password, type } = req.body;
   try {
-    let user = await db.query(`SELECT * FROM student_authentications WHERE email='${email}'`)
+    let user = type==="student"?
+    await db.query(`SELECT * FROM student_authentications WHERE email='${email}'`):
+    await db.query(`SELECT * FROM teacher_authentications WHERE email='${email}'`)
+
     if (user.rows.length === 0) {
       success = false;
       return res.status(400).json({ success, error: "Please try to login with valid email." })
