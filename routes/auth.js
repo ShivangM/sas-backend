@@ -113,7 +113,7 @@ router.post('/login', [
 router.post('/getuser', fetchUser, async (req, res) => {
   try {
     userEmail = req.email
-    const user = req.type==="student"? 
+    const user = req.body.type==="student"? 
     await db.query(`SELECT * FROM students WHERE email='${userEmail}'`):
     await db.query(`SELECT * FROM teacher WHERE email='${userEmail}'`)
     res.send(user.rows)
