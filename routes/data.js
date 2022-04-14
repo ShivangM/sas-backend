@@ -124,7 +124,7 @@ router.post('/getclassstudents', fetchUser, async (req, res) => {
     SELECT students.roll_number, students.name 
     FROM students
     INNER JOIN class ON students.roll_number = class.roll_number
-    WHERE class.semester_number = ${req.body.sem} 
+    WHERE class.semester_number = ${req.body.semester_number} 
     AND class.branch = '${req.body.branch}' 
     AND class.section = '${req.body.section}'
     ORDER BY students.roll_number;
