@@ -40,7 +40,7 @@ router.post('/feedattendance', fetchUser, async (req, res) => {
   }
 })
 
-//Route 1: Get User Subject Details using: POST "/api/data/getattendance". Login required
+//Route 3: Get User Subject Details using: POST "/api/data/getattendance". Login required
 router.post('/getsubjects', fetchUser, async (req, res) => {
   try {
     userEmail = req.email
@@ -100,6 +100,39 @@ router.post('/getsubjects', fetchUser, async (req, res) => {
   } catch (error) {
     console.error(error.message);
     res.status(500).send("User Not Found!");
+  }
+})
+
+//Route 4: Get User Attendance Details using: POST "/api/data/getattendance". Login required
+router.post('/getteaches', fetchUser, async (req, res) => {
+  try {
+    userEmail = req.email
+    const query = `SELECT semester_number, branch, section FROM takes_class WHERE email = '${userEmail}';`
+    const teaches = await db.query(query)
+    res.send(teaches.rows)
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("User Not Found!");
+  }
+})
+
+//Route 5: Get User Attendance Details using: POST "/api/data/getattendance". Login required
+router.post('/getclassstudents', fetchUser, async (req, res) => {
+  try {
+    userEmail = req.email
+    const query = `
+    SELECT students.roll_number, students.name 
+    FROM students
+    INNER JOIN class ON students.roll_number = class.roll_number
+    WHERE class.semester_number = ${req.body.sem} 
+    AND class.branch = '${req.body.branch}' 
+    AND class.section = '${req.body.section}';
+    `
+    const students = await db.query(query)
+    res.send(students.rows)
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Class Not Found!");
   }
 })
 
