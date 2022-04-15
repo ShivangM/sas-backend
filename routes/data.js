@@ -31,12 +31,14 @@ router.post('/getattendance', fetchUser, async (req, res) => {
 router.post('/feedattendance', fetchUser, async (req, res) => {
   try {
     userEmail = req.email
-    const query = `INSERT INTO attendance VALUES('${req.body.subject_code}','${req.body.roll_number}','${req.body.status}', '${req.body.date}');`
-    const ifExist = `SELECT * FROM attendance WHERE date = '${req.body.date}';`
-
+    const ifExist = `SELECT * FROM attendance WHERE date = '${req.body.list[0].date}';`
     const count = await db.query(ifExist)
+
     if(count.rowCount === 0){
-      db.query(query)
+      req.body.list.forEach((value)=>{
+        const query = `INSERT INTO attendance VALUES('${value.subject_code}','${value.roll_number}','${value.status}', '${value.date}');`
+        db.query(query)
+      })
       res.status(200).send("Ok")
     }
     else{
