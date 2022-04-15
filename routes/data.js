@@ -33,7 +33,7 @@ router.post('/feedattendance', fetchUser, async (req, res) => {
     userEmail = req.email
     const query = `INSERT INTO attendance VALUES('${req.body.subject_code}','${req.body.roll_number}','${req.body.status}', '${req.body.date}');`
     const ifExist = `SELECT count(*) FROM attendance WHERE date = '${req.body.date}');`
-    if (!ifExist.rows){
+    if (ifExist.rows === 0){
       db.query(query)
       res.status(200).send("Ok")
     }
