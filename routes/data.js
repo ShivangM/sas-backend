@@ -141,7 +141,7 @@ router.post('/getclassstudents', fetchUser, async (req, res) => {
     const students = await db.query(query)
     const teachesSubject = await db.query(querySubject)
 
-    res.send({students: students.rows, subject: teachesSubject})
+    res.send({students: students.rows, subject: teachesSubject.rows})
   } catch (error) {
     console.error(error.message);
     res.status(500).send("Class Not Found!");
