@@ -31,7 +31,7 @@ router.post('/getattendance', fetchUser, async (req, res) => {
 router.post('/feedattendance', fetchUser, async (req, res) => {
   try {
     userEmail = req.email
-    const query = `INSERT INTO attendance VALUES('${req.body.subject_code}','${req.body.roll_number}','${req.body.status}');`
+    const query = `INSERT INTO attendance VALUES('${req.body.subject_code}','${req.body.roll_number}','${req.body.status}', '${req.body.date}');`
     db.query(query)
     res.status(200).send("Ok")
   } catch (error) {
