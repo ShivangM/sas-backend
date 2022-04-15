@@ -32,8 +32,13 @@ router.post('/feedattendance', fetchUser, async (req, res) => {
   try {
     userEmail = req.email
     const query = `INSERT INTO attendance VALUES('${req.body.subject_code}','${req.body.roll_number}','${req.body.status}', '${req.body.date}');`
-    db.query(query)
-    res.status(200).send("Ok")
+    const ifExist = `SELECT count(*) FROM attendance WHERE date = '${req.body.date}');`
+    if (!ifExist.rows){
+      db.query(query)
+      res.status(200).send("Ok")
+    }
+    else{res.status(500).send("User Not Found!")}
+
   } catch (error) {
     console.error(error.message);
     res.status(500).send("User Not Found!");
