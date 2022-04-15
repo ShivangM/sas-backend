@@ -129,8 +129,19 @@ router.post('/getclassstudents', fetchUser, async (req, res) => {
     AND class.section = '${req.body.section}'
     ORDER BY students.roll_number;
     `
+    const querySubject = `
+      SELECT subject_code, subject_name FROM subject 
+      WHERE subject_code = (
+          SELECT subject_code FROM teaches WHERE email = '${userEmail}'
+          INTERSECT
+          SELECT subject_code FROM takes WHERE branch = 'IT' AND semester_number = 4
+      );
+    `
+
     const students = await db.query(query)
-    res.send(students.rows)
+    const teachesSubject = await db.query(querySubject)
+
+    res.send({students: students.rows, subject: teachesSubject})
   } catch (error) {
     console.error(error.message);
     res.status(500).send("Class Not Found!");
