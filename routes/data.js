@@ -175,7 +175,7 @@ router.post('/getattendanceondate', fetchUser, async (req, res) => {
     `
     const attendanceOnDate = await db.query(query)
     const strengthOnDate = await db.query(strength)
-    res.send({attendanceOnDate: attendanceOnDate.rows, strengthOnDate: strengthOnDate})
+    res.send({attendanceOnDate: attendanceOnDate.rows, strengthOnDate: strengthOnDate.rows})
   } catch (error) {
     console.error(error.message);
     res.status(500).send("User Not Found!");
