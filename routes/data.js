@@ -65,7 +65,8 @@ router.post('/getsubjects', fetchUser, async (req, res) => {
         INNER JOIN class ON (class.semester_number = takes.semester_number) AND (class.branch = takes.branch)
         INNER JOIN students ON class.roll_number = students.roll_number
         WHERE students.email = '${userEmail}'
-    );
+    )
+    ORDER BY subject_code;
     `
 
     const queryForTotalClassesInEachSubject = `
@@ -78,13 +79,13 @@ router.post('/getsubjects', fetchUser, async (req, res) => {
         INNER JOIN students ON class.roll_number = students.roll_number
         WHERE students.email = '${userEmail}'
     )
-    GROUP BY subject_code;
+    GROUP BY subject_code ORDER BY subject_code;
     `
     const queryForClassAttendedInEachSubject = `
     SELECT subject_code, COUNT(*) AS class_attended FROM attendance
     INNER JOIN students on students.roll_number = attendance.roll_number
     WHERE students.email = '${userEmail}' AND attendance.status = 'Present'
-    GROUP BY subject_code;
+    GROUP BY subject_code ORDER BY subject_code;
     `
 
     const queryForDate = `
