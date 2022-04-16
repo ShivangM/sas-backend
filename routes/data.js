@@ -165,7 +165,7 @@ router.post('/getattendanceondate', fetchUser, async (req, res) => {
     const query = `
     SELECT students.name, attendance.roll_number, attendance.status
     FROM attendance INNER JOIN students ON students.roll_number = attendance.roll_number
-    WHERE subject_code = '${req.body.subject_code}' AND attendance.date = '${date}'
+    WHERE subject_code = '${req.body.subject_code}' AND attendance.date = '${req.body.date}'
     ORDER BY attendance.roll_number;
     ` 
     const attendanceOnDate = await db.query(query)
