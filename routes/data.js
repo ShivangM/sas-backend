@@ -31,7 +31,7 @@ router.post('/getattendance', fetchUser, async (req, res) => {
 router.post('/feedattendance', fetchUser, async (req, res) => {
   try {
     userEmail = req.email
-    const ifExist = `SELECT * FROM attendance WHERE date = '${req.body.list[0].date}' AND subject_code = '${value.subject_code}';`
+    const ifExist = `SELECT * FROM attendance WHERE date = '${req.body.list[0].date}' AND subject_code = '${req.body.list[0].subject_code}';`
     const count = await db.query(ifExist)
 
     if(count.rowCount === 0){
