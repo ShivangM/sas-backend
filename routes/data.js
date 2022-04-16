@@ -167,9 +167,15 @@ router.post('/getattendanceondate', fetchUser, async (req, res) => {
     FROM attendance INNER JOIN students ON students.roll_number = attendance.roll_number
     WHERE subject_code = '${req.body.subject_code}' AND attendance.date = '${req.body.date}'
     ORDER BY attendance.roll_number;
-    ` 
+    `
+    
+    const strength = `
+    SELECT date, count(*) FROM attendance WHERE subject_code = '${req.body.subject_code}' 
+    AND status = 'Present' GROUP BY date;
+    `
     const attendanceOnDate = await db.query(query)
-    res.send(attendanceOnDate.rows)
+    const strengthOnDate = await db.query(strength)
+    res.send({attendanceOnDate: attendanceOnDate.rows, strengthOnDate: strengthOnDate})
   } catch (error) {
     console.error(error.message);
     res.status(500).send("User Not Found!");
