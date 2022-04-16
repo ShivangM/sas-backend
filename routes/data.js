@@ -159,4 +159,21 @@ router.post('/getclassstudents', fetchUser, async (req, res) => {
   }
 })
 
+//Route 6: Get User Attendance Details using: POST "/api/data/getattendance". Login required
+router.post('/getattendanceondate', fetchUser, async (req, res) => {
+  try {
+    const query = `
+    SELECT students.name, attendance.roll_number, attendance.status
+    FROM attendance INNER JOIN students ON students.roll_number = attendance.roll_number
+    WHERE subject_code = '${req.body.subject_code}' AND attendance.date = '${date}'
+    ORDER BY attendance.roll_number;
+    ` 
+    const attendanceOnDate = await db.query(query)
+    res.send(attendanceOnDate.rows)
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("User Not Found!");
+  }
+})
+
 module.exports = router
