@@ -17,7 +17,8 @@ router.post('/getattendance', fetchUser, async (req, res) => {
         AND a.subject_code = te.subject_code 
         AND a.subject_code = sub.subject_code 
         AND te.email = t.email
-        AND s.email = '${userEmail}';
+        AND s.email = '${userEmail}'
+        ORDER BY a.date DESC;
     `
     const attendance = await db.query(query)
     res.send(attendance.rows)

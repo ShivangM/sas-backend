@@ -6,7 +6,24 @@ const jwt = require('jsonwebtoken');
 var fetchUser = require('../middleware/fetchUser')
 require('dotenv').config();
 const db = require("../db")
-require('dotenv').config();
+const {Auth} = require('two-step-auth');
+const nodemailer = require('nodemailer');
+  
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USERNAME,
+    pass: process.env.PASSWORD
+  }
+});
+
+// async function login(emailId){
+//     const res = await Auth(emailId, "SAS-IETDAVV");
+//     console.log(res);
+//     console.log(res.mail);
+//     console.log(res.OTP);
+//     console.log(res.success);
+// }
 
 //Route 1: Create a User using: POST "/api/auth/createuser". No login required
 router.post('/createuser', [
@@ -42,20 +59,22 @@ router.post('/createuser', [
       return res.status(400).json({ success, error: "Not registered to collage!" })
     }
 
-    const salt = await bcrypt.genSalt(10);
-    secPassword = await bcrypt.hash(req.body.password, salt);
-    type==="student"?await 
-    db.query(`insert into student_authentications values('${req.body.email}','${secPassword}')`):
-    db.query(`insert into teacher_authentications values('${req.body.email}','${secPassword}')`)
+    // login(req.body.email)
 
-    const data = {
-      user: {
-        email: req.body.email
-      }
-    }
-    const authToken = jwt.sign(data, process.env.JWT_SECRET)
-    success = true;
-    res.json({ success, authToken })
+    // const salt = await bcrypt.genSalt(10);
+    // secPassword = await bcrypt.hash(req.body.password, salt);
+    // type==="student"?await 
+    // db.query(`insert into student_authentications values('${req.body.email}','${secPassword}')`):
+    // db.query(`insert into teacher_authentications values('${req.body.email}','${secPassword}')`)
+
+    // const data = {
+    //   user: {
+    //     email: req.body.email
+    //   }
+    // }
+    // const authToken = jwt.sign(data, process.env.JWT_SECRET)
+    // success = true;
+    // res.json({ success, authToken })
 
   } catch (error) {
     console.error(error.message);
