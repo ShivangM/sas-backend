@@ -6,16 +6,28 @@ const jwt = require('jsonwebtoken');
 var fetchUser = require('../middleware/fetchUser')
 require('dotenv').config();
 const db = require("../db")
-const {Auth} = require('two-step-auth');
+// const {Auth} = require('two-step-auth');
 const nodemailer = require('nodemailer');
   
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
+    type: 'OAuth2',
     user: process.env.EMAIL_USERNAME,
-    pass: process.env.PASSWORD
+    pass: process.env.PASSWORD,
+    clientId: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
+    refreshToken: process.env.REFRESH_TOKEN
   }
 });
+
+const mailConfigurations = {
+  from: '20bit056@ietdavv.edu.in',
+	to: 'shivangmishra0824@gmail.com',
+	subject: 'Sending Email using Node.js',
+	text: 'Hi! There, You know I am using the NodeJS Code'
+	+ ' along with NodeMailer to send this email.'
+};
 
 // async function login(emailId){
 //     const res = await Auth(emailId, "SAS-IETDAVV");
@@ -58,6 +70,13 @@ router.post('/createuser', [
     if (clg_authenticated.rows.length === 0) {
       return res.status(400).json({ success, error: "Not registered to collage!" })
     }
+
+    transporter.sendMail(mailConfigurations, function(error, info){
+      if (error) throw Error(error);
+      console.log('Email Sent Successfully');
+      console.log(info);
+    });
+    
 
     // login(req.body.email)
 
