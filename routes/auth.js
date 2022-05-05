@@ -6,7 +6,6 @@ const jwt = require('jsonwebtoken');
 var fetchUser = require('../middleware/fetchUser')
 require('dotenv').config();
 const db = require("../db")
-// const {Auth} = require('two-step-auth');
 const nodemailer = require('nodemailer');
   
 const transporter = nodemailer.createTransport({
@@ -28,14 +27,6 @@ const mailConfigurations = {
 	text: 'Hi! There, You know I am using the NodeJS Code'
 	+ ' along with NodeMailer to send this email.'
 };
-
-// async function login(emailId){
-//     const res = await Auth(emailId, "SAS-IETDAVV");
-//     console.log(res);
-//     console.log(res.mail);
-//     console.log(res.OTP);
-//     console.log(res.success);
-// }
 
 //Route 1: Create a User using: POST "/api/auth/createuser". No login required
 router.post('/createuser', [
