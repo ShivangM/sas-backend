@@ -50,7 +50,7 @@ router.get('/verify/:token', (req, res) => {
       // db.query(`insert into student_authentications values('${userData.email}','${userData.secPassword}')`):
       // db.query(`insert into teacher_authentications values('${userData.email}','${userData.secPassword}')`)
       res.send(
-        <p>Account created successfully, Please <a href='https://sasietdavv.netlify.app/login'>Login</a> to continue.</p>
+        "Account created successfully, Please Login to continue."
       );
     }
   });
