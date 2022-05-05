@@ -20,7 +20,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-const sendVerificationMail = async (sendTo, verificationToken) => {
+const sendVerificationMail = (sendTo, verificationToken) => {
   const mailConfigurations = {
     from: process.env.EMAIL_USERNAME,
     to: sendTo,
@@ -29,11 +29,9 @@ const sendVerificationMail = async (sendTo, verificationToken) => {
     https://sasietdavv-backend.herokuapp.com/api/auth/verify/${verificationToken}`
   };
 
-  await transporter.sendMail(mailConfigurations, function (error) {
+  transporter.sendMail(mailConfigurations, function (error, info) {
     if (error) throw Error(error);
   });
-
-  return("Verifiaction Email has been sent.")
 }
 
 router.get('/verify/:token', (req, res) => {
@@ -102,7 +100,8 @@ router.post('/createuser', [
     }, process.env.JWT_SECRET, { expiresIn: '10m' }
     );
 
-  res.send(sendVerificationMail(email, token))
+  sendVerificationMail(email, token)
+  res.send("Verification Email Sent!")
 
   } catch (error) {
     console.error(error.message);
