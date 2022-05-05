@@ -7,7 +7,7 @@ var fetchUser = require('../middleware/fetchUser')
 require('dotenv').config();
 const db = require("../db")
 const nodemailer = require('nodemailer');
-  
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -20,13 +20,38 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-const mailConfigurations = {
-  from: '20bit056@ietdavv.edu.in',
-	to: 'shivangmishra0824@gmail.com',
-	subject: 'Sending Email using Node.js',
-	text: 'Hi! There, You know I am using the NodeJS Code'
-	+ ' along with NodeMailer to send this email.'
-};
+const sendVerificationMail = (sendTo, verificationToken) => {
+  const mailConfigurations = {
+    from: process.env.EMAIL_USERNAME,
+    to: sendTo,
+    subject: 'Verify your SAS-IETDAVV Account',
+    text: `Thank you for signup to SAS-IETDAVV please click the link to verifiy your account:
+    https://sasietdavv-backend.herokuapp.com/api/auth/verify/${verificationToken}`
+  };
+
+  transporter.sendMail(mailConfigurations, function (error) {
+    if (error) throw Error(error);
+  });
+}
+
+router.get('/verify/:token', (req, res) => {
+  const { token } = req.params;
+
+  // Verifing the JWT token 
+  jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
+    if (err) {
+      console.log(err);
+      res.send("Email verification failed, possibly the link is invalid or expired");
+    }
+    else {
+      const userData = decoded.data
+      userData.type === "student" ? 
+      db.query(`insert into student_authentications values('${userData.email}','${userData.secPassword}')`):
+      db.query(`insert into teacher_authentications values('${userData.email}','${userData.secPassword}')`)
+      res.send("Account created successfully, Please Login to continue.");
+    }
+  });
+});
 
 //Route 1: Create a User using: POST "/api/auth/createuser". No login required
 router.post('/createuser', [
@@ -42,17 +67,19 @@ router.post('/createuser', [
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-  
+
   // Check whether the user with this email exists already
   try {
     const type = req.body.type;
-    let user = type==="student"?
-    await db.query(`SELECT * FROM student_authentications WHERE email= '${req.body.email}'`):
-    await db.query(`SELECT * FROM teacher_authentications WHERE email= '${req.body.email}'`)
+    const email = req.body.email;
 
-    let clg_authenticated = type==="student"?
-    await db.query(`SELECT * FROM students WHERE email= '${req.body.email}'`):
-    await db.query(`SELECT * FROM teacher WHERE email= '${req.body.email}'`)
+    let user = type === "student" ?
+      await db.query(`SELECT * FROM student_authentications WHERE email= '${email}'`) :
+      await db.query(`SELECT * FROM teacher_authentications WHERE email= '${email}'`)
+
+    let clg_authenticated = type === "student" ?
+      await db.query(`SELECT * FROM students WHERE email= '${email}'`) :
+      await db.query(`SELECT * FROM teacher WHERE email= '${email}'`)
 
     if (user.rows.length > 0) {
       return res.status(400).json({ success, error: "Sorry a user with this email already exists" })
@@ -62,29 +89,16 @@ router.post('/createuser', [
       return res.status(400).json({ success, error: "Not registered to collage!" })
     }
 
-    transporter.sendMail(mailConfigurations, function(error, info){
-      if (error) throw Error(error);
-      console.log('Email Sent Successfully');
-      console.log(info);
-    });
-    
+    const salt = await bcrypt.genSalt(10);
+    const secPassword = await bcrypt.hash(req.body.password, salt);
 
-    // login(req.body.email)
+    const token = jwt.sign({
+      data: { email: email, type: type, secPassword: secPassword }
+    }, process.env.JWT_SECRET, { expiresIn: '10m' }
+    );
 
-    // const salt = await bcrypt.genSalt(10);
-    // secPassword = await bcrypt.hash(req.body.password, salt);
-    // type==="student"?await 
-    // db.query(`insert into student_authentications values('${req.body.email}','${secPassword}')`):
-    // db.query(`insert into teacher_authentications values('${req.body.email}','${secPassword}')`)
-
-    // const data = {
-    //   user: {
-    //     email: req.body.email
-    //   }
-    // }
-    // const authToken = jwt.sign(data, process.env.JWT_SECRET)
-    // success = true;
-    // res.json({ success, authToken })
+  sendVerificationMail(email, token)
+  res.send("Verification Email Sent!")
 
   } catch (error) {
     console.error(error.message);
@@ -107,9 +121,9 @@ router.post('/login', [
 
   const { email, password, type } = req.body;
   try {
-    let user = type==="student"?
-    await db.query(`SELECT * FROM student_authentications WHERE email='${email}'`):
-    await db.query(`SELECT * FROM teacher_authentications WHERE email='${email}'`)
+    let user = type === "student" ?
+      await db.query(`SELECT * FROM student_authentications WHERE email='${email}'`) :
+      await db.query(`SELECT * FROM teacher_authentications WHERE email='${email}'`)
 
     if (user.rows.length === 0) {
       success = false;
@@ -142,9 +156,9 @@ router.post('/login', [
 router.post('/getuser', fetchUser, async (req, res) => {
   try {
     userEmail = req.email
-    const user = req.body.type==="student"? 
-    await db.query(`SELECT * FROM students WHERE email='${userEmail}'`):
-    await db.query(`SELECT * FROM teacher WHERE email='${userEmail}'`)
+    const user = req.body.type === "student" ?
+      await db.query(`SELECT * FROM students WHERE email='${userEmail}'`) :
+      await db.query(`SELECT * FROM teacher WHERE email='${userEmail}'`)
     res.send(user.rows)
   } catch (error) {
     console.error(error.message);
