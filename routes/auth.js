@@ -100,8 +100,8 @@ router.post('/createuser', [
     }, process.env.JWT_SECRET, { expiresIn: '10m' }
     );
 
-  sendVerificationMail(email, token)
-  res.send("Verification Email Sent!")
+  await sendVerificationMail(email, token)
+  res.send("Verification Email Sent!");
 
   } catch (error) {
     console.error(error.message);
