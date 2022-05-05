@@ -45,14 +45,12 @@ router.get('/verify/:token', (req, res) => {
     }
     else {
       const userData = decoded.data
-      console.log(userData)
       userData.type === "student" ? 
       db.query(`insert into student_authentications values('${userData.email}','${userData.secPassword}')`):
       db.query(`insert into teacher_authentications values('${userData.email}','${userData.secPassword}')`)
       res.send(
-        "Account created successfully, Redirecting......"
+        "Account created successfully, please login to continue."
       );
-      res.redirect('https://sasietdavv.netlify.app/login')
     }
   });
 });
