@@ -48,9 +48,19 @@ router.get('/verify/:token', (req, res) => {
       userData.type === "student" ? 
       db.query(`insert into student_authentications values('${userData.email}','${userData.secPassword}')`):
       db.query(`insert into teacher_authentications values('${userData.email}','${userData.secPassword}')`)
-      res.send(
-        "Account created successfully, please login to continue."
-      );
+
+      const mailConfigurations = {
+        from: process.env.EMAIL_USERNAME,
+        to: userData.email,
+        subject: 'Sucessfully Registered to SAS-IETDAVV',
+        html: `<p> Your account has been created please <a href="https://sasietdavv.netlify.app/login">login</a> to continue.</p>`
+      };
+
+      res.redirect("https://sasietdavv.netlify.app/login")
+
+      transporter.sendMail(mailConfigurations, function (error, info) {
+        if (error) throw Error(error);
+      });
     }
   });
 });
@@ -100,7 +110,7 @@ router.post('/createuser', [
     );
 
   sendVerificationMail(email, token)
-  res.send("Verification Email Sent!")
+  res.status(200).send("Verification Email Sent! Please verify your account to continue.")
 
   } catch (error) {
     console.error(error.message);
