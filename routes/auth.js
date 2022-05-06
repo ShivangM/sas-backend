@@ -60,7 +60,7 @@ router.get('/verify/:token', (req, res) => {
         db.query(`insert into student_authentications values('${userData.email}','${userData.secPassword}')`):
         db.query(`insert into teacher_authentications values('${userData.email}','${userData.secPassword}')`)
       } catch (error) {
-        
+        flag = false
       }
 
       res.redirect("https://sasietdavv.netlify.app/login")
