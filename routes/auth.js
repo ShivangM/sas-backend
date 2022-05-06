@@ -45,9 +45,6 @@ router.get('/verify/:token', (req, res) => {
     }
     else {
       const userData = decoded.data
-      userData.type === "student" ? 
-      db.query(`insert into student_authentications values('${userData.email}','${userData.secPassword}')`):
-      db.query(`insert into teacher_authentications values('${userData.email}','${userData.secPassword}')`)
 
       const mailConfigurations = {
         from: process.env.EMAIL_USERNAME,
@@ -56,11 +53,23 @@ router.get('/verify/:token', (req, res) => {
         html: `<p> Your account has been created please <a href="https://sasietdavv.netlify.app/login">login</a> to continue.</p>`
       };
 
+      const flag = true;
+
+      try {
+        userData.type === "student" ? 
+        db.query(`insert into student_authentications values('${userData.email}','${userData.secPassword}')`):
+        db.query(`insert into teacher_authentications values('${userData.email}','${userData.secPassword}')`)
+      } catch (error) {
+        
+      }
+
       res.redirect("https://sasietdavv.netlify.app/login")
 
-      transporter.sendMail(mailConfigurations, function (error, info) {
-        if (error) throw Error(error);
-      });
+      if (flag) {
+        transporter.sendMail(mailConfigurations, function (error, info) {
+          if (error) throw Error(error);
+        });
+      }
     }
   });
 });
