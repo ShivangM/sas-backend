@@ -77,21 +77,20 @@ router.post('/createuser', [
 
   // Check whether the user with this email exists already
   try {
-
-    let user = await type === "student" ?
+    let user = type === "student" ?
       await db.query(`SELECT * FROM student_authentications WHERE email= '${email}'`) :
       await db.query(`SELECT * FROM teacher_authentications WHERE email= '${email}'`)
 
-    let clg_authenticated = await type === "student" ?
-      await db.query(`SELECT * FROM students WHERE email= '${email}'`) :
+    let clg_authenticated = type === "student" ?
+      await db.query(`SELECT * FROM students WHERE email= '${email}'`):
       await db.query(`SELECT * FROM teacher WHERE email= '${email}'`)
 
     if (user.rows.length > 0) {
-      return res.status(400).json({ success, error: "Sorry a user with this email already exists!" })
+      res.status(400).send("Sorry a user with this email already exists!")
     }
 
     if (clg_authenticated.rows.length === 0) {
-      return res.status(400).json({ success, error: "Sorry your email is not registered by collage!" })
+      res.status(400).send("Sorry your email is not registered by collage!")
     }
 
     const salt = await bcrypt.genSalt(10);
