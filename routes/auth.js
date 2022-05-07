@@ -26,7 +26,9 @@ const sendVerificationMail = (sendTo, verificationToken) => {
     to: sendTo,
     subject: 'Verify your SAS-IETDAVV Account',
     text: `Thank you for signup to SAS-IETDAVV please click the link to verifiy your account:
-    https://sasietdavv-backend.herokuapp.com/api/auth/verify/${verificationToken}`
+    https://sasietdavv-backend.herokuapp.com/api/auth/verify/${verificationToken}
+    
+    Please ignore this email if this was not attemted by you.`
   };
 
   transporter.sendMail(mailConfigurations, function (error, info) {
