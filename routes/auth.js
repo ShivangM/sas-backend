@@ -67,8 +67,6 @@ router.post('/createuser', [
   body('type', 'Type Not Found').exists()
 ], async (req, res) => {
   // If there are errors, return Bad request and the errors
-
-  let success = false;
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -134,12 +132,12 @@ router.post('/login', [
       await db.query(`SELECT * FROM teacher_authentications WHERE email='${email}'`)
 
     if (user.rows.length === 0) {
-      return res.status(400).json({ success, error: "Incorrect Email Or Password" })
+      return res.status(400).json({error: "Incorrect Email Or Password" })
     }
 
     const passwordComp = await bcrypt.compare(password, user.rows[0].password)
     if (!passwordComp) {
-      return res.status(400).json({ success, error: "Incorrect Email Or Password" })
+      return res.status(400).json({error: "Incorrect Email Or Password" })
     }
 
     const data = {
@@ -149,7 +147,7 @@ router.post('/login', [
     }
 
     const authToken = jwt.sign(data, process.env.JWT_SECRET)
-    res.status(200).json({ success, authToken })
+    res.status(200).json({authToken })
 
   } catch (error) {
     console.error(error.message);
