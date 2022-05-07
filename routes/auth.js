@@ -73,7 +73,7 @@ router.post('/createuser', [
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const {type,email} = req.body;
+  const {type , email} = req.body;
 
   // Check whether the user with this email exists already
   try {
