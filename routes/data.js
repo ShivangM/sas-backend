@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-// const { body, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 var fetchUser = require('../middleware/fetchUser')
 require('dotenv').config();
@@ -23,7 +22,6 @@ router.post('/getattendance', fetchUser, async (req, res) => {
     const attendance = await db.query(query)
     res.send(attendance.rows)
   } catch (error) {
-    console.error(error.message);
     res.status(500).send("User Not Found!");
   }
 })
@@ -46,12 +44,11 @@ router.post('/feedattendance', fetchUser, async (req, res) => {
       res.status(500).send("Attendance Already Exist");
     }
   } catch (error) {
-    console.error(error.message);
     res.status(500).send("User Not Found!");
   }
 })
 
-//Route 3: Get User Subject Details using: POST "/api/data/getattendance". Login required
+//Route 3: Get User Subject Details using: POST "/api/data/getsubjects". Login required
 router.post('/getsubjects', fetchUser, async (req, res) => {
   try {
     userEmail = req.email
@@ -69,7 +66,6 @@ router.post('/getsubjects', fetchUser, async (req, res) => {
     )
     ORDER BY subject_code;
     `
-
     const queryForTotalClassesInEachSubject = `
     SELECT subject_code, COUNT(DISTINCT(date)) AS classes 
     FROM attendance
@@ -88,14 +84,12 @@ router.post('/getsubjects', fetchUser, async (req, res) => {
     WHERE students.email = '${userEmail}' AND attendance.status = 'Present'
     GROUP BY subject_code ORDER BY subject_code;
     `
-
     const queryForDate = `
     SELECT date, status, subject_code FROM attendance
     INNER JOIN students ON students.roll_number = attendance.roll_number 
     WHERE students.email = '${userEmail}'
     ORDER BY date;
     `
-
     const subjectDetails = await db.query(queryForSubjectDetails)
     const totalClassInEachSubject = await db.query(queryForTotalClassesInEachSubject)
     const classAttendedInEachSubject = await db.query(queryForClassAttendedInEachSubject)
@@ -115,7 +109,7 @@ router.post('/getsubjects', fetchUser, async (req, res) => {
   }
 })
 
-//Route 4: Get User Attendance Details using: POST "/api/data/getattendance". Login required
+//Route 4: Get teachers tought clases: POST "/api/data/getteaches". Login required
 router.post('/getteaches', fetchUser, async (req, res) => {
   try {
     userEmail = req.email
@@ -128,7 +122,7 @@ router.post('/getteaches', fetchUser, async (req, res) => {
   }
 })
 
-//Route 5: Get User Attendance Details using: POST "/api/data/getattendance". Login required
+//Route 5: Get student of a class teacher teaches: POST "/api/data/getclassstudents". Login required
 router.post('/getclassstudents', fetchUser, async (req, res) => {
   try {
     userEmail = req.email
@@ -160,7 +154,7 @@ router.post('/getclassstudents', fetchUser, async (req, res) => {
   }
 })
 
-//Route 6: Get User Attendance Details using: POST "/api/data/getattendance". Login required
+//Route 6: Get User Attendance Details on a particular date using: POST "/api/data/getattendanceondate". Login required
 router.post('/getattendanceondate', fetchUser, async (req, res) => {
   try {
     const query = `
@@ -178,7 +172,6 @@ router.post('/getattendanceondate', fetchUser, async (req, res) => {
     const strengthOnDate = await db.query(strength)
     res.send({attendanceOnDate: attendanceOnDate.rows, strengthOnDate: strengthOnDate.rows})
   } catch (error) {
-    console.error(error.message);
     res.status(500).send("User Not Found!");
   }
 })

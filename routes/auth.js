@@ -20,6 +20,8 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+
+//Function to send verification mail
 const sendVerificationMail = (sendTo, verificationToken) => {
   const mailConfigurations = {
     from: process.env.EMAIL_USERNAME,
@@ -32,18 +34,21 @@ const sendVerificationMail = (sendTo, verificationToken) => {
   };
 
   transporter.sendMail(mailConfigurations, function (error, info) {
-    if (error) throw Error(error);
+    if (error) return false;
   });
+
+  return true
 }
 
+
+//Verify email of user
 router.get('/verify/:token', (req, res) => {
   const { token } = req.params;
 
   // Verifing the JWT token 
   jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
     if (err) {
-      console.log(err);
-      res.send("Email verification failed, possibly the link is invalid or expired");
+      res.status(400).send("Email verification failed, possibly the link is invalid or expired");
     }
     else {
       const userData = decoded.data
@@ -70,72 +75,71 @@ router.post('/createuser', [
     return res.status(400).json({ errors: errors.array() });
   }
 
+  const {type,email} = req.body;
+
   // Check whether the user with this email exists already
   try {
-    const type = req.body.type;
-    const email = req.body.email;
 
-    let user = type === "student" ?
+    let user = await type === "student" ?
       await db.query(`SELECT * FROM student_authentications WHERE email= '${email}'`) :
       await db.query(`SELECT * FROM teacher_authentications WHERE email= '${email}'`)
 
-    let clg_authenticated = type === "student" ?
+    let clg_authenticated = await type === "student" ?
       await db.query(`SELECT * FROM students WHERE email= '${email}'`) :
       await db.query(`SELECT * FROM teacher WHERE email= '${email}'`)
 
     if (user.rows.length > 0) {
-      return res.status(400).json({ success, error: "Sorry a user with this email already exists" })
+      return res.status(400).json({ success, error: "Sorry a user with this email already exists!" })
     }
 
     if (clg_authenticated.rows.length === 0) {
-      return res.status(400).json({ success, error: "Not registered to collage!" })
+      return res.status(400).json({ success, error: "Sorry your email is not registered by collage!" })
     }
 
     const salt = await bcrypt.genSalt(10);
     const secPassword = await bcrypt.hash(req.body.password, salt);
 
-    const token = jwt.sign({
+    const token = await jwt.sign({
       data: { email: email, type: type, secPassword: secPassword }
     }, process.env.JWT_SECRET, { expiresIn: '10m' }
     );
 
-  sendVerificationMail(email, token)
-  res.status(200).send("Verification Email Sent! Please verify your account to continue.")
+  const emailSent = await sendVerificationMail(email, token)
+  emailSent? res.status(200).send("Verification Email Sent! Please verify your account to continue.")
+  :res.status(400).send("Failed to send verification email. Please Provide a valid email address!")
 
   } catch (error) {
-    console.error(error.message);
     res.status(500).send("Some Error occured");
   }
 })
 
-//Route 2: Authenticate a User using: POST "/api/auth/login". No login required
+//Route 2: Login User using: POST "/api/auth/login". No login required
 router.post('/login', [
   body('email', 'Enter a valid email').isEmail(),
   body('password', 'Password cannot be blank').exists(),
   body('type', 'Type Not Found').exists(),
 ], async (req, res) => {
+
   // If there are errors, return Bad request and the errors
-  let success = false;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
 
   const { email, password, type } = req.body;
+
   try {
     let user = type === "student" ?
       await db.query(`SELECT * FROM student_authentications WHERE email='${email}'`) :
       await db.query(`SELECT * FROM teacher_authentications WHERE email='${email}'`)
 
     if (user.rows.length === 0) {
-      success = false;
-      return res.status(400).json({ success, error: "Please try to login with valid email." })
+      return res.status(400).json({ success, error: "Incorrect Email Or Password" })
     }
 
     const passwordComp = await bcrypt.compare(password, user.rows[0].password)
     if (!passwordComp) {
-      success = false;
-      return res.status(400).json({ success, error: "Incorrect Password" })
+      return res.status(400).json({ success, error: "Incorrect Email Or Password" })
     }
 
     const data = {
@@ -144,9 +148,8 @@ router.post('/login', [
       }
     }
 
-    success = true
     const authToken = jwt.sign(data, process.env.JWT_SECRET)
-    res.json({ success, authToken })
+    res.status(200).json({ success, authToken })
 
   } catch (error) {
     console.error(error.message);
@@ -161,7 +164,7 @@ router.post('/getuser', fetchUser, async (req, res) => {
     const user = req.body.type === "student" ?
       await db.query(`SELECT * FROM students WHERE email='${userEmail}'`) :
       await db.query(`SELECT * FROM teacher WHERE email='${userEmail}'`)
-    res.send(user.rows)
+    res.status(200).send(user.rows)
   } catch (error) {
     console.error(error.message);
     res.status(500).send("User Not Found!");
