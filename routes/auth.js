@@ -85,12 +85,16 @@ router.post('/createuser', [
       await db.query(`SELECT * FROM students WHERE email= '${email}'`):
       await db.query(`SELECT * FROM teacher WHERE email= '${email}'`)
 
+    const varified = true
+
     if (user.rows.length > 0) {
       res.status(400).send("Sorry a user with this email already exists!")
+      varified = false
     }
 
     if (clg_authenticated.rows.length === 0) {
       res.status(400).send("Sorry your email is not registered by collage!")
+      varified = false
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -101,9 +105,11 @@ router.post('/createuser', [
     }, process.env.JWT_SECRET, { expiresIn: '10m' }
     );
 
-  const emailSent = await sendVerificationMail(email, token)
-  emailSent? res.status(200).send("Verification Email Sent! Please verify your account to continue.")
-  :res.status(400).send("Failed to send verification email. Please Provide a valid email address!")
+  if(varified){
+    const emailSent = await sendVerificationMail(email, token)
+    emailSent? res.status(200).send("Verification Email Sent! Please verify your account to continue.")
+    :res.status(400).send("Failed to send verification email. Please Provide a valid email address!")
+  }
 
   } catch (error) {
     res.status(500).send("Some Error occured");
