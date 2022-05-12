@@ -41,10 +41,10 @@ router.post('/feedattendance', fetchUser, async (req, res) => {
       res.status(200).send("Ok")
     }
     else{
-      res.status(500).send("Attendance Already Exist");
+      res.status(400).send("Attendance Already Exist");
     }
   } catch (error) {
-    res.status(500).send("User Not Found!");
+    res.status(400).send("User Not Found!");
   }
 })
 
