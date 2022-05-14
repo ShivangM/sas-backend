@@ -254,10 +254,17 @@ router.post('/changepassword', [
       const salt = await bcrypt.genSalt(10);
       const secPassword = await bcrypt.hash(newPassword, salt);
 
-      const result = await db.query(`
+      type==="student"?
+        await db.query(`
         UPDATE student_authentications SET 
         password='${secPassword}' 
         WHERE email='${email}';
+      `)
+      :
+      await db.query(`
+      UPDATE teacher_authentications SET 
+      password='${secPassword}' 
+      WHERE email='${email}';
       `)
 
       res.status(200).send("Updated Password")
