@@ -160,6 +160,50 @@ router.post('/login', [
   }
 })
 
+//Route 2: Login User using: POST "/api/auth/login". No login required
+router.post('/login', [
+  body('email', 'Enter a valid email').isEmail(),
+  body('password', 'Password cannot be blank').exists(),
+  body('type', 'Type Not Found').exists(),
+], async (req, res) => {
+
+  // If there are errors, return Bad request and the errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { email, password, type } = req.body;
+
+  try {
+    let user = type === "student" ?
+      await db.query(`SELECT * FROM student_authentications WHERE email='${email}'`) :
+      await db.query(`SELECT * FROM teacher_authentications WHERE email='${email}'`)
+
+    if (user.rows.length === 0) {
+      return res.status(400).json({error: "Incorrect Email Or Password" })
+    }
+
+    const passwordComp = await bcrypt.compare(password, user.rows[0].password)
+    if (!passwordComp) {
+      return res.status(400).json({error: "Incorrect Email Or Password" })
+    }
+
+    const data = {
+      user: {
+        email: email
+      }
+    }
+
+    const authToken = jwt.sign(data, process.env.JWT_SECRET)
+    res.status(200).json({authToken })
+
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Some Error occured");
+  }
+})
+
 //Route 3: Get User Details using: POST "/api/auth/getuser". Login required
 router.post('/getuser', fetchUser, async (req, res) => {
   try {
@@ -171,6 +215,58 @@ router.post('/getuser', fetchUser, async (req, res) => {
   } catch (error) {
     console.error(error.message);
     res.status(500).send("User Not Found!");
+  }
+})
+
+//Route: Update Password: POST "/api/auth/changepassword". login required
+router.post('/changepassword', [
+  body('newPassword', 'Password must be atleast 5 characters').isLength({ min: 5 }),
+  body('password', 'Password must be atleast 5 characters').exists(),
+  body('type', 'Type Not Found').exists()
+], async (req, res) => {
+  // If there are errors, return Bad request and the errors
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const {type , newPassword, password, email} = req.body;
+
+  // Check whether the user with this email exists already
+  try {
+    let oldPassword = "";
+    type==="student"?
+    oldPassword = await db.query(`
+      SELECT password FROM student_authentications 
+      WHERE email='${email}';
+    `)
+    :
+    oldPassword = await db.query(`
+      SELECT password FROM teacher_authentications 
+      WHERE email='${email}';
+    `)
+
+    console.log(oldPassword)
+
+    if (bcrypt.compare(password, oldPassword.rows[0])) {
+
+      const salt = await bcrypt.genSalt(10);
+      const secPassword = await bcrypt.hash(newPassword, salt);
+
+      const result = await db.query(`
+        UPDATE student_authentications SET 
+        password='${secPassword}' 
+        WHERE email='${email}';
+      `)
+
+      res.status(200).send("Updated Password")
+    } else {
+      res.status(401).send("Could Not Update Password")
+    }
+
+  } catch (error) {
+    res.status(500).send("Some Error occured");
   }
 })
 
