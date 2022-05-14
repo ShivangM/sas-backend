@@ -247,9 +247,9 @@ router.post('/changepassword', [
       WHERE email='${email}';
     `)
 
-    console.log(oldPassword)
+    const comp = await bcrypt.compare(password, oldPassword.rows[0].password)
 
-    if (bcrypt.compare(password, oldPassword.rows[0])) {
+    if (comp) {
 
       const salt = await bcrypt.genSalt(10);
       const secPassword = await bcrypt.hash(newPassword, salt);
